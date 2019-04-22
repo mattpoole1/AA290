@@ -38,6 +38,34 @@ def swarm_measure(swarm):
 def swarm_move(swarm, dt):
 	for sprite in swarm:
 		sprite.pos = sprite.pos + sprite.vel*dt
+
+def error_eval(swarm):
+	error = 0
+	for sprite in swarm:
+		for sprite2 in swarm:
+			belief = np.linalg.norm(sprite.pos - sprite2.pos)
+			error += belief - sprite.ranges[sprite2.idx]
+	return error
+
+def state_estimate(swarm):
+	step = 0.1
+	error = error_eval(swarm)
+	J = np.empty(3*SIZE)
+	state = np.empty(3*SIZE)
+	for sprite in swarm:
+		old_pos = sprite.pos
+		for d in range(0, 3):
+			state[3*sprite.idx+d] = sprite.pos[d]
+			sprite.pos[d] += step
+			derror = error_eval(swarm) - error
+			J[3*sprite.idx+d] = derror
+	print state
+	state = state - J.transpose()/(J.transpose()*J)*error
+	print state
+	return J
+
+		
+	
 							
 
 
@@ -56,6 +84,8 @@ if __name__ == '__main__':
 	swarm_measure(swarm)
 	for sprite in swarm:
 		print sprite.ranges
+
+	state_estimate(swarm)
 	
 		
 
